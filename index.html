@@ -304,15 +304,44 @@ footer {
     return new Blob([byteArray], { type: mime });
   }
 
+  var FORMSPREE_ENDPOINT = 'https://formspree.io/f/moeqaeen';
+  var submitBtn = form.querySelector('button[type="submit"]');
+  var submitBtnLabel = submitBtn.textContent;
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var email = emailInput.value.trim();
     if (!isValidEmail(email)) {
+      errorMsg.textContent = "Controlla l'indirizzo email e riprova.";
       errorMsg.classList.add('is-active');
       return;
     }
     errorMsg.classList.remove('is-active');
-    showState('success');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Invio...';
+
+    fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email,
+        _subject: 'Nuova richiesta media kit (link in bio)'
+      })
+    }).then(function (res) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitBtnLabel;
+      if (res.ok) {
+        showState('success');
+      } else {
+        errorMsg.textContent = "Qualcosa è andato storto, riprova tra poco.";
+        errorMsg.classList.add('is-active');
+      }
+    }).catch(function () {
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitBtnLabel;
+      errorMsg.textContent = "Qualcosa è andato storto, riprova tra poco.";
+      errorMsg.classList.add('is-active');
+    });
   });
 
   downloadBtn.addEventListener('click', function () {
