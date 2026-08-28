@@ -242,13 +242,16 @@ footer {
 
       <div class="state is-active" data-state="form">
         <p class="desc">Chi sono, dove sono apparso in TV, come lavoro con le aziende e quanto costa. Lascia la tua email per riceverlo.</p>
-        <form id="mk-form" novalidate>
+        <form id="mk-form" novalidate action="https://assets.mailerlite.com/jsonp/2602490/forms/197064297593963870/subscribe" method="post" target="mk-hidden-frame">
           <div class="email-row">
-            <input type="email" id="mk-email" placeholder="la-tua-email@esempio.com" autocomplete="email" required>
+            <input type="email" id="mk-email" name="fields[email]" placeholder="la-tua-email@esempio.com" autocomplete="email" required>
             <button type="submit" class="btn btn-outline">Scarica</button>
           </div>
+          <input type="hidden" name="ml-submit" value="1">
+          <input type="hidden" name="anticsrf" value="true">
           <div class="error-msg" id="mk-error">Controlla l'indirizzo email e riprova.</div>
         </form>
+        <iframe name="mk-hidden-frame" title="invio media kit" style="display:none" aria-hidden="true"></iframe>
         <p class="form-note">Il download parte subito, dopo aver lasciato l'email.</p>
       </div>
 
@@ -304,14 +307,13 @@ footer {
     return new Blob([byteArray], { type: mime });
   }
 
-  var FORMSPREE_ENDPOINT = 'https://formspree.io/f/moeqaeen';
   var submitBtn = form.querySelector('button[type="submit"]');
   var submitBtnLabel = submitBtn.textContent;
 
   form.addEventListener('submit', function (e) {
-    e.preventDefault();
     var email = emailInput.value.trim();
     if (!isValidEmail(email)) {
+      e.preventDefault();
       errorMsg.textContent = "Controlla l'indirizzo email e riprova.";
       errorMsg.classList.add('is-active');
       return;
@@ -319,29 +321,14 @@ footer {
     errorMsg.classList.remove('is-active');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Invio...';
-
-    fetch(FORMSPREE_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: email,
-        _subject: 'Nuova richiesta media kit (link in bio)'
-      })
-    }).then(function (res) {
+    // L'invio va davvero a MailerLite tramite iframe nascosto (submit reale del form).
+    // Essendo cross-origin non possiamo leggere l'esito: mostriamo lo stato di successo
+    // subito dopo l'invio, come nell'esperienza attuale.
+    setTimeout(function () {
       submitBtn.disabled = false;
       submitBtn.textContent = submitBtnLabel;
-      if (res.ok) {
-        showState('success');
-      } else {
-        errorMsg.textContent = "Qualcosa è andato storto, riprova tra poco.";
-        errorMsg.classList.add('is-active');
-      }
-    }).catch(function () {
-      submitBtn.disabled = false;
-      submitBtn.textContent = submitBtnLabel;
-      errorMsg.textContent = "Qualcosa è andato storto, riprova tra poco.";
-      errorMsg.classList.add('is-active');
-    });
+      showState('success');
+    }, 600);
   });
 
   downloadBtn.addEventListener('click', function () {
